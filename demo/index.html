@@ -17,10 +17,15 @@
   .banner { background: #b42318; color: #fff; padding: 14px 16px; font-size: 28px; font-weight: 700; }
   .banner.ok { background: #1f6b4a; }
   .docs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
-  .doc { border: 2px solid #b42318; background: #fff4f2; padding: 12px; }
+  .doc { border: 2px solid #b42318; background: #fff4f2; padding: 12px; word-break: break-word; }
   .doc strong { font-size: 22px; color: #b42318; }
   button { margin-top: 16px; background: #1b3a4b; color: #fff; border: 0; padding: 10px 14px; font-size: 16px; cursor: pointer; }
   .note { margin-top: 12px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+  .stat { background: #fff; border: 1px solid #d9d3cb; padding: 14px; }
+  .stat strong { display: block; font-size: 26px; color: #1b3a4b; }
+  .roadmap { background: #fff; border: 1px solid #d9d3cb; margin: 0 28px 20px; padding: 16px; }
+  .roadmap h2 { margin: 0 0 8px; font-size: 20px; }
   footer { padding: 0 28px 24px; color: #5c6b73; }
 </style>
 </head>
@@ -33,19 +38,36 @@
   <ul id="list"></ul>
   <section class="panel" id="panel"></section>
 </main>
+<section class="stats" id="stats"></section>
+<section class="roadmap">
+  <h2>下一步往哪里扩</h2>
+  <ul>
+    <li>把装箱单、提单换成拍照或 PDF，接千问视觉抽取，规则层不变。</li>
+    <li>加一个目的国的硬规则，仍只覆盖一国。</li>
+    <li>把这一页作为制品提交到 DataClawHub，运营方案另交。</li>
+  </ul>
+</section>
 <footer id="foot"></footer>
 <script>
 const DATA = {"shipments": [{"id": "SH-2026-014", "title": "宁波—洛杉矶 家电", "demo": true, "verdict": "hold", "headline": "先别申报", "blocks": [{"kind": "gross_weight", "birth_station": "packing", "packing_kg": 12480, "bl_kg": 12000, "gap": 0.04, "action": "改提单毛重，或改装箱单后再发", "if_send": "毛重偏差超过约 3%，自动比对可能退单"}, {"kind": "countries", "birth_station": null, "action": "把贸易国、启运国、原产国、最终目的国分成四栏再发", "if_send": "四国口径被写成原产国一格，优惠原产地可能判错", "detail": {"trade": "中国", "departure": "中国", "origin": "越南", "destination": "美国", "collapsed_value": "越南"}}], "ocr_ignored": 0}, {"id": "SH-2026-021", "title": "上海—新加坡 纺织", "demo": false, "verdict": "hold", "headline": "先别申报", "blocks": [{"kind": "seal_no", "birth_station": "manifest", "title": "封条号", "bl": "SL100001", "manifest": "SL100099", "action": "先改封条号，提单和舱单必须是同一版", "if_send": "封条号不一致，自动比对可能退单"}], "ocr_ignored": 0}, {"id": "SH-2026-033", "title": "青岛—釜山 配件", "demo": false, "verdict": "send", "headline": "可以申报", "blocks": [], "ocr_ignored": 1}, {"id": "SH-2026-040", "title": "厦门—胡志明 鞋", "demo": false, "verdict": "hold", "headline": "先别申报", "blocks": [{"kind": "countries", "birth_station": null, "action": "把贸易国、启运国、原产国、最终目的国分成四栏再发", "if_send": "四国口径被写成原产国一格，优惠原产地可能判错", "detail": {"trade": "中国", "departure": "中国", "origin": "越南", "destination": "越南", "collapsed_value": "越南"}}], "ocr_ignored": 0}, {"id": "SH-2026-052", "title": "天津—东京 食品添加剂", "demo": false, "verdict": "send", "headline": "可以申报", "blocks": [], "ocr_ignored": 0}, {"id": "SH-2026-061", "title": "深圳—汉堡 灯具", "demo": false, "verdict": "hold", "headline": "先别申报", "blocks": [{"kind": "gross_weight", "birth_station": "bl", "packing_kg": 12000, "bl_kg": 12600, "gap": 0.0476, "action": "改提单毛重，或改装箱单后再发", "if_send": "毛重偏差超过约 3%，自动比对可能退单"}], "ocr_ignored": 0}], "birth_station_ratio": 0.6667, "birth_station_hit": 2, "birth_station_total": 3, "country_mix_count": 2, "weight_hold_count": 2, "threshold_note": "约 3% 来自公开海运清关说明里毛重误差常在自动比对被退单的说法，不是海关法条。"};
+const FLOWS = {"SH-2026-014": {"documents": {"packing": "DOC_TYPE: PACKING_LIST\nDOC_STATION: packing\nSHIPMENT: SH-2026-014\nTITLE: 宁波—洛杉矶 家电\nGROSS_WEIGHT_KG: 12480\nCONTAINER_NO: TCLU1234567\nSEAL_NO: SL880021\nCOUNTRY: 越南\nTRADE_COUNTRY: 中国\nORIGIN_COUNTRY: 越南\n", "bl": "DOC_TYPE: BILL_OF_LADING\nDOC_STATION: bl\nSHIPMENT: SH-2026-014\nTITLE: 宁波—洛杉矶 家电\nGROSS_WEIGHT_KG: 12000\nCONTAINER_NO: TCLU1234567\nSEAL_NO: SL880021\nCOUNTRY: 越南\nTRADE_COUNTRY: 中国\nORIGIN_COUNTRY: 越南\n"}, "trace": [{"stage": "ingest", "documents": ["bl", "packing"], "chars": {"packing": 199, "bl": 196}}, {"stage": "extract", "stations": ["packing", "bl"], "qwen": "off"}, {"stage": "structure", "weight_points": 2, "ocr_points": 0}, {"stage": "decide", "verdict": "hold", "blocks": 2}, {"stage": "explain", "verdict": "hold"}], "explanation": "先别申报 毛重偏差超过约 3%，自动比对可能退单 改提单毛重，或改装箱单后再发 四国口径被写成原产国一格，优惠原产地可能判错 把贸易国、启运国、原产国、最终目的国分成四栏再发 以上句子只复述规则结果。"}, "SH-2026-021": {"documents": {"packing": "DOC_TYPE: PACKING_LIST\nDOC_STATION: packing\nSHIPMENT: SH-2026-021\nTITLE: 上海—新加坡 纺织\nGROSS_WEIGHT_KG: 8000\nCONTAINER_NO: MSCU7654321\nSEAL_NO: SL100001\nTRADE_COUNTRY: 中国\nDEPARTURE_COUNTRY: 中国\nORIGIN_COUNTRY: 中国\nDESTINATION_COUNTRY: 新加坡\n", "bl": "DOC_TYPE: BILL_OF_LADING\nDOC_STATION: bl\nSHIPMENT: SH-2026-021\nTITLE: 上海—新加坡 纺织\nGROSS_WEIGHT_KG: 8000\nCONTAINER_NO: MSCU7654321\nSEAL_NO: SL100001\nTRADE_COUNTRY: 中国\nDEPARTURE_COUNTRY: 中国\nORIGIN_COUNTRY: 中国\nDESTINATION_COUNTRY: 新加坡\n", "manifest": "DOC_TYPE: MANIFEST\nDOC_STATION: manifest\nSHIPMENT: SH-2026-021\nCONTAINER_NO: MSCU7654321\nSEAL_NO: SL100099\n"}, "trace": [{"stage": "ingest", "documents": ["bl", "manifest", "packing"], "chars": {"packing": 233, "bl": 230, "manifest": 107}}, {"stage": "extract", "stations": ["packing", "bl", "manifest"], "qwen": "off"}, {"stage": "structure", "weight_points": 2, "ocr_points": 0}, {"stage": "decide", "verdict": "hold", "blocks": 1}, {"stage": "explain", "verdict": "hold"}], "explanation": "先别申报 封条号不一致，自动比对可能退单 先改封条号，提单和舱单必须是同一版 以上句子只复述规则结果。"}, "SH-2026-033": {"documents": {"packing": "DOC_TYPE: PACKING_LIST\nDOC_STATION: packing\nSHIPMENT: SH-2026-033\nTITLE: 青岛—釜山 配件\nGROSS_WEIGHT_KG: 5000\nOCR GROSS_WEIGHT_KG: 99999\nCONTAINER_NO: OOLU1111222\nSEAL_NO: SL300003\nTRADE_COUNTRY: 中国\nDEPARTURE_COUNTRY: 中国\nORIGIN_COUNTRY: 中国\nDESTINATION_COUNTRY: 韩国\n", "bl": "DOC_TYPE: BILL_OF_LADING\nDOC_STATION: bl\nSHIPMENT: SH-2026-033\nTITLE: 青岛—釜山 配件\nGROSS_WEIGHT_KG: 5000\nCONTAINER_NO: OOLU1111222\nSEAL_NO: SL300003\nTRADE_COUNTRY: 中国\nDEPARTURE_COUNTRY: 中国\nORIGIN_COUNTRY: 中国\nDESTINATION_COUNTRY: 韩国\n"}, "trace": [{"stage": "ingest", "documents": ["bl", "packing"], "chars": {"packing": 258, "bl": 228}}, {"stage": "extract", "stations": ["packing", "bl"], "qwen": "off"}, {"stage": "structure", "weight_points": 3, "ocr_points": 1}, {"stage": "decide", "verdict": "send", "blocks": 0}, {"stage": "explain", "verdict": "send"}], "explanation": "可以申报 装箱毛重与提单一致，柜号和封条只有一版，四国口径分栏。 已忽略 1 处抽取误差，不计入改写。 以上句子只复述规则结果。"}, "SH-2026-040": {"documents": {"packing": "DOC_TYPE: PACKING_LIST\nDOC_STATION: packing\nSHIPMENT: SH-2026-040\nTITLE: 厦门—胡志明 鞋\nGROSS_WEIGHT_KG: 3000\nCONTAINER_NO: CXRU5555666\nSEAL_NO: SL400004\nCOUNTRY: 越南\nTRADE_COUNTRY: 中国\nORIGIN_COUNTRY: 越南\n", "bl": "DOC_TYPE: BILL_OF_LADING\nDOC_STATION: bl\nSHIPMENT: SH-2026-040\nTITLE: 厦门—胡志明 鞋\nGROSS_WEIGHT_KG: 3000\nCONTAINER_NO: CXRU5555666\nSEAL_NO: SL400004\nCOUNTRY: 越南\nTRADE_COUNTRY: 中国\nORIGIN_COUNTRY: 越南\n"}, "trace": [{"stage": "ingest", "documents": ["bl", "packing"], "chars": {"packing": 197, "bl": 194}}, {"stage": "extract", "stations": ["packing", "bl"], "qwen": "off"}, {"stage": "structure", "weight_points": 2, "ocr_points": 0}, {"stage": "decide", "verdict": "hold", "blocks": 1}, {"stage": "explain", "verdict": "hold"}], "explanation": "先别申报 四国口径被写成原产国一格，优惠原产地可能判错 把贸易国、启运国、原产国、最终目的国分成四栏再发 以上句子只复述规则结果。"}, "SH-2026-052": {"documents": {"packing": "DOC_TYPE: PACKING_LIST\nDOC_STATION: packing\nSHIPMENT: SH-2026-052\nTITLE: 天津—东京 食品添加剂\nGROSS_WEIGHT_KG: 1500\nCONTAINER_NO: TEMU8888999\nSEAL_NO: SL500005\nTRADE_COUNTRY: 中国\nDEPARTURE_COUNTRY: 中国\nORIGIN_COUNTRY: 中国\nDESTINATION_COUNTRY: 日本\n", "bl": "DOC_TYPE: BILL_OF_LADING\nDOC_STATION: bl\nSHIPMENT: SH-2026-052\nTITLE: 天津—东京 食品添加剂\nGROSS_WEIGHT_KG: 1500\nCONTAINER_NO: TEMU8888999\nSEAL_NO: SL500005\nTRADE_COUNTRY: 中国\nDEPARTURE_COUNTRY: 中国\nORIGIN_COUNTRY: 中国\nDESTINATION_COUNTRY: 日本\n"}, "trace": [{"stage": "ingest", "documents": ["bl", "packing"], "chars": {"packing": 234, "bl": 231}}, {"stage": "extract", "stations": ["packing", "bl"], "qwen": "off"}, {"stage": "structure", "weight_points": 2, "ocr_points": 0}, {"stage": "decide", "verdict": "send", "blocks": 0}, {"stage": "explain", "verdict": "send"}], "explanation": "可以申报 装箱毛重与提单一致，柜号和封条只有一版，四国口径分栏。 以上句子只复述规则结果。"}, "SH-2026-061": {"documents": {"packing": "DOC_TYPE: PACKING_LIST\nDOC_STATION: packing\nSHIPMENT: SH-2026-061\nTITLE: 深圳—汉堡 灯具\nGROSS_WEIGHT_KG: 12000\nCONTAINER_NO: HLCU2222333\nSEAL_NO: SL600006\nTRADE_COUNTRY: 中国\nDEPARTURE_COUNTRY: 中国\nORIGIN_COUNTRY: 中国\nDESTINATION_COUNTRY: 德国\n", "bl": "DOC_TYPE: BILL_OF_LADING\nDOC_STATION: bl\nSHIPMENT: SH-2026-061\nTITLE: 深圳—汉堡 灯具\nGROSS_WEIGHT_KG: 12600\nCONTAINER_NO: HLCU2222333\nSEAL_NO: SL600006\nTRADE_COUNTRY: 中国\nDEPARTURE_COUNTRY: 中国\nORIGIN_COUNTRY: 中国\nDESTINATION_COUNTRY: 德国\n"}, "trace": [{"stage": "ingest", "documents": ["bl", "packing"], "chars": {"packing": 232, "bl": 229}}, {"stage": "extract", "stations": ["packing", "bl"], "qwen": "off"}, {"stage": "structure", "weight_points": 2, "ocr_points": 0}, {"stage": "decide", "verdict": "hold", "blocks": 1}, {"stage": "explain", "verdict": "hold"}], "explanation": "先别申报 毛重偏差超过约 3%，自动比对可能退单 改提单毛重，或改装箱单后再发 以上句子只复述规则结果。"}};
 const STATION = {"booking": "订舱", "packing": "装箱", "bl": "提单", "manifest": "舱单", "declaration": "报关单"};
 const list = document.getElementById("list");
 const panel = document.getElementById("panel");
 function show(item) {
+  const flow = FLOWS[item.id] || { documents: {}, trace: [], explanation: "" };
+  const steps = flow.trace.map(step => step.stage).join(" → ");
+  const packing = (flow.documents.packing || "").replaceAll("\n", "<br>");
+  const bl = (flow.documents.bl || "").replaceAll("\n", "<br>");
   const weight = item.blocks.find(b => b.kind === "gross_weight");
   const country = item.blocks.find(b => b.kind === "countries");
   const seal = item.blocks.find(b => b.kind === "seal_no" || b.kind === "container_no");
   const banner = item.verdict === "hold" ? "先别申报" : "可以申报";
   let body = `<div class="banner ${item.verdict === "hold" ? "" : "ok"}">${banner}</div>`;
   body += `<p>${item.id} · ${item.title}</p>`;
+  body += `<p class="sub">数据流：${steps}</p>`;
+  body += `<div class="docs"><div class="doc"><div>装箱单文本</div><p>${packing}</p></div><div class="doc"><div>提单文本</div><p>${bl}</p></div></div>`;
+  if (flow.explanation) body += `<p>${flow.explanation}</p>`;
   if (weight) {
     const pct = Math.round(weight.gap * 1000) / 10;
     const where = STATION[weight.birth_station] || "未知站点";
@@ -80,8 +102,11 @@ DATA.shipments.forEach(item => {
 const demo = DATA.shipments.find(item => item.demo) || DATA.shipments[0];
 show(demo);
 const ratio = Math.round(DATA.birth_station_ratio * 100);
-document.getElementById("foot").textContent =
-  `页脚：站点改写落在装箱或舱单 ${DATA.birth_station_hit}/${DATA.birth_station_total}（${ratio}%） · 四国混填判错 ${DATA.country_mix_count} 票 · 毛重越过约 3% ${DATA.weight_hold_count} 票。${DATA.threshold_note}`;
+document.getElementById("stats").innerHTML = `
+  <div class="stat"><strong>${DATA.birth_station_hit}/${DATA.birth_station_total}</strong>站点改写落在装箱或舱单（${ratio}%）</div>
+  <div class="stat"><strong>${DATA.country_mix_count}</strong>四国口径混填判错的票数</div>
+  <div class="stat"><strong>${DATA.weight_hold_count}</strong>毛重越过约 3% 的票数</div>`;
+document.getElementById("foot").textContent = DATA.threshold_note;
 </script>
 </body>
 </html>

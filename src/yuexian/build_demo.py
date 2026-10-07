@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 
+from yuexian.pipeline import run_dataset
 from yuexian.rules import load_dataset, score
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -18,16 +19,29 @@ STATION = {
 
 
 def main() -> None:
-    payload = score(load_dataset())
-    html = _page(payload)
+    dataset = load_dataset()
+    payload = score(dataset)
+    flows = run_dataset(dataset)
+    html = _page(payload, flows)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(html, encoding="utf-8")
     print(OUT)
 
 
-def _page(payload: dict) -> str:
+def _page(payload: dict, flows: list[dict]) -> str:
     data = json.dumps(payload, ensure_ascii=False)
     stations = json.dumps(STATION, ensure_ascii=False)
+    flow_data = json.dumps(
+        {
+            item["id"]: {
+                "documents": item["documents"],
+                "trace": item["trace"],
+                "explanation": item["explanation"],
+            }
+            for item in flows
+        },
+        ensure_ascii=False,
+    )
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -47,10 +61,15 @@ def _page(payload: dict) -> str:
   .banner {{ background: #b42318; color: #fff; padding: 14px 16px; font-size: 28px; font-weight: 700; }}
   .banner.ok {{ background: #1f6b4a; }}
   .docs {{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }}
-  .doc {{ border: 2px solid #b42318; background: #fff4f2; padding: 12px; }}
+  .doc {{ border: 2px solid #b42318; background: #fff4f2; padding: 12px; word-break: break-word; }}
   .doc strong {{ font-size: 22px; color: #b42318; }}
   button {{ margin-top: 16px; background: #1b3a4b; color: #fff; border: 0; padding: 10px 14px; font-size: 16px; cursor: pointer; }}
   .note {{ margin-top: 12px; }}
+  .stats {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }}
+  .stat {{ background: #fff; border: 1px solid #d9d3cb; padding: 14px; }}
+  .stat strong {{ display: block; font-size: 26px; color: #1b3a4b; }}
+  .roadmap {{ background: #fff; border: 1px solid #d9d3cb; margin: 0 28px 20px; padding: 16px; }}
+  .roadmap h2 {{ margin: 0 0 8px; font-size: 20px; }}
   footer {{ padding: 0 28px 24px; color: #5c6b73; }}
 </style>
 </head>
@@ -63,19 +82,36 @@ def _page(payload: dict) -> str:
   <ul id="list"></ul>
   <section class="panel" id="panel"></section>
 </main>
+<section class="stats" id="stats"></section>
+<section class="roadmap">
+  <h2>下一步往哪里扩</h2>
+  <ul>
+    <li>把装箱单、提单换成拍照或 PDF，接千问视觉抽取，规则层不变。</li>
+    <li>加一个目的国的硬规则，仍只覆盖一国。</li>
+    <li>把这一页作为制品提交到 DataClawHub，运营方案另交。</li>
+  </ul>
+</section>
 <footer id="foot"></footer>
 <script>
 const DATA = {data};
+const FLOWS = {flow_data};
 const STATION = {stations};
 const list = document.getElementById("list");
 const panel = document.getElementById("panel");
 function show(item) {{
+  const flow = FLOWS[item.id] || {{ documents: {{}}, trace: [], explanation: "" }};
+  const steps = flow.trace.map(step => step.stage).join(" → ");
+  const packing = (flow.documents.packing || "").replaceAll("\\n", "<br>");
+  const bl = (flow.documents.bl || "").replaceAll("\\n", "<br>");
   const weight = item.blocks.find(b => b.kind === "gross_weight");
   const country = item.blocks.find(b => b.kind === "countries");
   const seal = item.blocks.find(b => b.kind === "seal_no" || b.kind === "container_no");
   const banner = item.verdict === "hold" ? "先别申报" : "可以申报";
   let body = `<div class="banner ${{item.verdict === "hold" ? "" : "ok"}}">${{banner}}</div>`;
   body += `<p>${{item.id}} · ${{item.title}}</p>`;
+  body += `<p class="sub">数据流：${{steps}}</p>`;
+  body += `<div class="docs"><div class="doc"><div>装箱单文本</div><p>${{packing}}</p></div><div class="doc"><div>提单文本</div><p>${{bl}}</p></div></div>`;
+  if (flow.explanation) body += `<p>${{flow.explanation}}</p>`;
   if (weight) {{
     const pct = Math.round(weight.gap * 1000) / 10;
     const where = STATION[weight.birth_station] || "未知站点";
@@ -110,8 +146,11 @@ DATA.shipments.forEach(item => {{
 const demo = DATA.shipments.find(item => item.demo) || DATA.shipments[0];
 show(demo);
 const ratio = Math.round(DATA.birth_station_ratio * 100);
-document.getElementById("foot").textContent =
-  `页脚：站点改写落在装箱或舱单 ${{DATA.birth_station_hit}}/${{DATA.birth_station_total}}（${{ratio}}%） · 四国混填判错 ${{DATA.country_mix_count}} 票 · 毛重越过约 3% ${{DATA.weight_hold_count}} 票。${{DATA.threshold_note}}`;
+document.getElementById("stats").innerHTML = `
+  <div class="stat"><strong>${{DATA.birth_station_hit}}/${{DATA.birth_station_total}}</strong>站点改写落在装箱或舱单（${{ratio}}%）</div>
+  <div class="stat"><strong>${{DATA.country_mix_count}}</strong>四国口径混填判错的票数</div>
+  <div class="stat"><strong>${{DATA.weight_hold_count}}</strong>毛重越过约 3% 的票数</div>`;
+document.getElementById("foot").textContent = DATA.threshold_note;
 </script>
 </body>
 </html>
