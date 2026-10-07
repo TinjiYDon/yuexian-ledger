@@ -1,0 +1,167 @@
+{
+  "threshold_gross_weight": 0.03,
+  "threshold_note": "约 3% 来自公开海运清关说明里毛重误差常在自动比对被退单的说法，不是海关法条。",
+  "stations": ["booking", "packing", "bl", "manifest", "declaration"],
+  "station_label": {
+    "booking": "订舱",
+    "packing": "装箱",
+    "bl": "提单",
+    "manifest": "舱单",
+    "declaration": "报关单"
+  },
+  "shipments": [
+    {
+      "id": "SH-2026-014",
+      "title": "宁波—洛杉矶 家电",
+      "demo": true,
+      "gross_weight_kg": [
+        {"station": "booking", "value": 12000, "label": "rewrite"},
+        {"station": "packing", "value": 12480, "label": "rewrite"},
+        {"station": "bl", "value": 12000, "label": "rewrite"},
+        {"station": "manifest", "value": 12000, "label": "rewrite"},
+        {"station": "declaration", "value": 12000, "label": "rewrite"}
+      ],
+      "container_no": [
+        {"station": "bl", "value": "TCLU1234567", "label": "rewrite"},
+        {"station": "manifest", "value": "TCLU1234567", "label": "rewrite"}
+      ],
+      "seal_no": [
+        {"station": "bl", "value": "SL880021", "label": "rewrite"},
+        {"station": "manifest", "value": "SL880021", "label": "rewrite"}
+      ],
+      "countries": {
+        "trade": "中国",
+        "departure": "中国",
+        "origin": "越南",
+        "destination": "美国",
+        "collapsed_value": "越南"
+      }
+    },
+    {
+      "id": "SH-2026-021",
+      "title": "上海—新加坡 纺织",
+      "demo": false,
+      "gross_weight_kg": [
+        {"station": "booking", "value": 8000, "label": "rewrite"},
+        {"station": "packing", "value": 8000, "label": "rewrite"},
+        {"station": "bl", "value": 8000, "label": "rewrite"}
+      ],
+      "container_no": [
+        {"station": "bl", "value": "MSCU7654321", "label": "rewrite"},
+        {"station": "manifest", "value": "MSCU7654321", "label": "rewrite"}
+      ],
+      "seal_no": [
+        {"station": "bl", "value": "SL100001", "label": "rewrite"},
+        {"station": "manifest", "value": "SL100099", "label": "rewrite"}
+      ],
+      "countries": {
+        "trade": "中国",
+        "departure": "中国",
+        "origin": "中国",
+        "destination": "新加坡",
+        "collapsed_value": null
+      }
+    },
+    {
+      "id": "SH-2026-033",
+      "title": "青岛—釜山 配件",
+      "demo": false,
+      "gross_weight_kg": [
+        {"station": "packing", "value": 99999, "label": "ocr_error"},
+        {"station": "booking", "value": 5000, "label": "rewrite"},
+        {"station": "packing", "value": 5000, "label": "rewrite"},
+        {"station": "bl", "value": 5000, "label": "rewrite"}
+      ],
+      "container_no": [
+        {"station": "bl", "value": "OOLU1111222", "label": "rewrite"},
+        {"station": "manifest", "value": "OOLU1111222", "label": "rewrite"}
+      ],
+      "seal_no": [
+        {"station": "bl", "value": "SL300003", "label": "rewrite"},
+        {"station": "manifest", "value": "SL300003", "label": "rewrite"}
+      ],
+      "countries": {
+        "trade": "中国",
+        "departure": "中国",
+        "origin": "中国",
+        "destination": "韩国",
+        "collapsed_value": null
+      }
+    },
+    {
+      "id": "SH-2026-040",
+      "title": "厦门—胡志明 鞋",
+      "demo": false,
+      "gross_weight_kg": [
+        {"station": "booking", "value": 3000, "label": "rewrite"},
+        {"station": "packing", "value": 3000, "label": "rewrite"},
+        {"station": "bl", "value": 3000, "label": "rewrite"}
+      ],
+      "container_no": [
+        {"station": "bl", "value": "CXRU5555666", "label": "rewrite"},
+        {"station": "manifest", "value": "CXRU5555666", "label": "rewrite"}
+      ],
+      "seal_no": [
+        {"station": "bl", "value": "SL400004", "label": "rewrite"},
+        {"station": "manifest", "value": "SL400004", "label": "rewrite"}
+      ],
+      "countries": {
+        "trade": "中国",
+        "departure": "中国",
+        "origin": "越南",
+        "destination": "越南",
+        "collapsed_value": "越南"
+      }
+    },
+    {
+      "id": "SH-2026-052",
+      "title": "天津—东京 食品添加剂",
+      "demo": false,
+      "gross_weight_kg": [
+        {"station": "booking", "value": 1500, "label": "rewrite"},
+        {"station": "packing", "value": 1500, "label": "rewrite"},
+        {"station": "bl", "value": 1500, "label": "rewrite"}
+      ],
+      "container_no": [
+        {"station": "bl", "value": "TEMU8888999", "label": "rewrite"},
+        {"station": "manifest", "value": "TEMU8888999", "label": "rewrite"}
+      ],
+      "seal_no": [
+        {"station": "bl", "value": "SL500005", "label": "rewrite"},
+        {"station": "manifest", "value": "SL500005", "label": "rewrite"}
+      ],
+      "countries": {
+        "trade": "中国",
+        "departure": "中国",
+        "origin": "中国",
+        "destination": "日本",
+        "collapsed_value": null
+      }
+    },
+    {
+      "id": "SH-2026-061",
+      "title": "深圳—汉堡 灯具",
+      "demo": false,
+      "gross_weight_kg": [
+        {"station": "booking", "value": 12000, "label": "rewrite"},
+        {"station": "packing", "value": 12000, "label": "rewrite"},
+        {"station": "bl", "value": 12600, "label": "rewrite"}
+      ],
+      "container_no": [
+        {"station": "bl", "value": "HLCU2222333", "label": "rewrite"},
+        {"station": "manifest", "value": "HLCU2222333", "label": "rewrite"}
+      ],
+      "seal_no": [
+        {"station": "bl", "value": "SL600006", "label": "rewrite"},
+        {"station": "manifest", "value": "SL600006", "label": "rewrite"}
+      ],
+      "countries": {
+        "trade": "中国",
+        "departure": "中国",
+        "origin": "中国",
+        "destination": "德国",
+        "collapsed_value": null
+      }
+    }
+  ]
+}
