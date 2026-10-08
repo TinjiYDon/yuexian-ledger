@@ -9,9 +9,13 @@
 用浏览器直接打开 `demo/index.html`。列表里红色的一票是主演示，点进去是「先别申报」、两处毛重和要改的栏。页脚三个数由规则对全部样例复算，不是手填的。
 
 ```powershell
-python -m unittest discover -s tests -v
+python -m unittest discover -s tests -t . -v
 python -m yuexian.build_demo
 ```
+
+`-t .` 让`tests` 作为包导入，其中的路径引导会把 `src/` 加入 `sys.path`，
+所以在刚克隆下来的机器上无需先 `pip install -e .`。若已安装本包，
+也可以用 `pip install -e ".[dev]"` 后直接 `pytest`。
 
 ## 最终版范围
 
