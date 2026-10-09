@@ -27,6 +27,6 @@ python -m yuexian.build_demo
 
 数据流见 `docs/数据流.md`，判定见 `docs/算法.md`，扩展见 `docs/扩展.md`，提交见 `docs/提交清单.md`。
 
-## 四人分工
+## 五人分工
 
 见 `docs/OWNERS.md`。角色先占坑，GitHub 用户名由组员填上后再改 CODEOWNERS。
