@@ -19,25 +19,33 @@ def render_shipment(shipment: dict) -> dict[str, str]:
     return docs
 
 
+TITLES = {
+    "PACKING_LIST": "装箱单 PACKING LIST",
+    "BILL_OF_LADING": "提单 BILL OF LADING",
+    "MANIFEST": "舱单 MANIFEST",
+}
+
+
 def _doc(shipment: dict, station: str, doc_type: str) -> str:
     weight = value_at(shipment.get("gross_weight_kg", []), station)
     container = value_at(shipment.get("container_no", []), "bl")
     seal = value_at(shipment.get("seal_no", []), station if station != "packing" else "bl")
     lines = [
-        f"DOC_TYPE: {doc_type}",
-        f"DOC_STATION: {station}",
-        f"SHIPMENT: {shipment['id']}",
-        f"TITLE: {shipment.get('title', '')}",
+        TITLES[doc_type],
+        "合成样例，非正式海关单证。",
+        f"单证站点：{station}",
+        f"票号：{shipment['id']}",
+        f"货名：{shipment.get('title', '')}",
     ]
     if weight is not None:
-        lines.append(f"GROSS_WEIGHT_KG: {weight}")
+        lines.append(f"毛重（公斤）：{weight}")
     noisy = _ocr_noise(shipment.get("gross_weight_kg", []), station)
     if noisy is not None:
-        lines.append(f"OCR GROSS_WEIGHT_KG: {noisy}")
+        lines.append(f"扫描毛重（公斤）：{noisy}")
     if container:
-        lines.append(f"CONTAINER_NO: {container}")
+        lines.append(f"柜号：{container}")
     if seal:
-        lines.append(f"SEAL_NO: {seal}")
+        lines.append(f"封条号：{seal}")
     lines.extend(_country_lines(shipment))
     return "\n".join(lines) + "\n"
 
@@ -51,14 +59,15 @@ def _manifest(shipment: dict) -> str | None:
     if seal == bl_seal and container == value_at(shipment.get("container_no", []), "bl"):
         return None
     lines = [
-        "DOC_TYPE: MANIFEST",
-        "DOC_STATION: manifest",
-        f"SHIPMENT: {shipment['id']}",
+        TITLES["MANIFEST"],
+        "合成样例，非正式海关单证。",
+        "单证站点：manifest",
+        f"票号：{shipment['id']}",
     ]
     if container:
-        lines.append(f"CONTAINER_NO: {container}")
+        lines.append(f"柜号：{container}")
     if seal:
-        lines.append(f"SEAL_NO: {seal}")
+        lines.append(f"封条号：{seal}")
     return "\n".join(lines) + "\n"
 
 
@@ -80,13 +89,13 @@ def _country_lines(shipment: dict) -> list[str]:
     collapsed = countries.get("collapsed_value")
     if collapsed:
         return [
-            f"COUNTRY: {collapsed}",
-            f"TRADE_COUNTRY: {countries.get('trade', '')}",
-            f"ORIGIN_COUNTRY: {countries.get('origin', '')}",
+            f"国家：{collapsed}",
+            f"贸易国：{countries.get('trade', '')}",
+            f"原产国：{countries.get('origin', '')}",
         ]
     return [
-        f"TRADE_COUNTRY: {countries.get('trade', '')}",
-        f"DEPARTURE_COUNTRY: {countries.get('departure', '')}",
-        f"ORIGIN_COUNTRY: {countries.get('origin', '')}",
-        f"DESTINATION_COUNTRY: {countries.get('destination', '')}",
+        f"贸易国：{countries.get('trade', '')}",
+        f"启运国：{countries.get('departure', '')}",
+        f"原产国：{countries.get('origin', '')}",
+        f"最终目的国：{countries.get('destination', '')}",
     ]

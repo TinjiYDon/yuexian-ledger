@@ -61,6 +61,9 @@ def _page(payload: dict, flows: list[dict]) -> str:
   .banner {{ background: #b42318; color: #fff; padding: 14px 16px; font-size: 28px; font-weight: 700; }}
   .banner.ok {{ background: #1f6b4a; }}
   .docs {{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }}
+  .paper {{ border: 1px solid #1b3a4b; background: #fffdf8; padding: 14px 16px; font-family: "SimSun", "Microsoft YaHei", serif; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }}
+  .paper h3 {{ margin: 0 0 8px; font-size: 16px; text-align: center; }}
+  .hit {{ background: #ffd6d1; }}
   .doc {{ border: 2px solid #b42318; background: #fff4f2; padding: 12px; word-break: break-word; }}
   .doc strong {{ font-size: 22px; color: #b42318; }}
   button {{ margin-top: 16px; background: #1b3a4b; color: #fff; border: 0; padding: 10px 14px; font-size: 16px; cursor: pointer; }}
@@ -86,7 +89,7 @@ def _page(payload: dict, flows: list[dict]) -> str:
 <section class="roadmap">
   <h2>下一步往哪里扩</h2>
   <ul>
-    <li>把装箱单、提单换成拍照或 PDF，接千问视觉抽取，规则层不变。</li>
+    <li>把这两张合成样页换成拍照或 PDF，接千问视觉抽取，规则层不变。</li>
     <li>加一个目的国的硬规则，仍只覆盖一国。</li>
     <li>把这一页作为制品提交到 DataClawHub，运营方案另交。</li>
   </ul>
@@ -101,8 +104,13 @@ const panel = document.getElementById("panel");
 function show(item) {{
   const flow = FLOWS[item.id] || {{ documents: {{}}, trace: [], explanation: "" }};
   const steps = flow.trace.map(step => step.stage).join(" → ");
-  const packing = (flow.documents.packing || "").replaceAll("\\n", "<br>");
-  const bl = (flow.documents.bl || "").replaceAll("\\n", "<br>");
+  function paper(title, text, hit) {{
+    const marked = (text || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;");
+    const html = hit ? marked.replace(hit, `<span class="hit">${{hit}}</span>`) : marked;
+    return `<div class="paper"><h3>${{title}}</h3><div>${{html}}</div></div>`;
+  }}
+  const packingHit = item.blocks.find(b => b.kind === "gross_weight") ? String(item.blocks.find(b => b.kind === "gross_weight").packing_kg) : "";
+  const blHit = item.blocks.find(b => b.kind === "gross_weight") ? String(item.blocks.find(b => b.kind === "gross_weight").bl_kg) : "";
   const weight = item.blocks.find(b => b.kind === "gross_weight");
   const country = item.blocks.find(b => b.kind === "countries");
   const seal = item.blocks.find(b => b.kind === "seal_no" || b.kind === "container_no");
@@ -110,7 +118,7 @@ function show(item) {{
   let body = `<div class="banner ${{item.verdict === "hold" ? "" : "ok"}}">${{banner}}</div>`;
   body += `<p>${{item.id}} · ${{item.title}}</p>`;
   body += `<p class="sub">数据流：${{steps}}</p>`;
-  body += `<div class="docs"><div class="doc"><div>装箱单文本</div><p>${{packing}}</p></div><div class="doc"><div>提单文本</div><p>${{bl}}</p></div></div>`;
+  body += `<div class="docs">${{paper("装箱单", flow.documents.packing, packingHit)}}${{paper("提单", flow.documents.bl, blHit)}}</div>`;
   if (flow.explanation) body += `<p>${{flow.explanation}}</p>`;
   if (weight) {{
     const pct = Math.round(weight.gap * 1000) / 10;

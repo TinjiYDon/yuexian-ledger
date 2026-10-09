@@ -12,8 +12,8 @@ class DocumentExportTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1] / "artifacts" / "documents" / "SH-2026-014"
         packing = (root / "packing.txt").read_text(encoding="utf-8")
         bl = (root / "bl.txt").read_text(encoding="utf-8")
-        self.assertIn("GROSS_WEIGHT_KG: 12480", packing)
-        self.assertIn("GROSS_WEIGHT_KG: 12000", bl)
+        self.assertIn("毛重（公斤）：12480", packing)
+        self.assertIn("毛重（公斤）：12000", bl)
 
 
 if __name__ == "__main__":

@@ -9,10 +9,33 @@ from __future__ import annotations
 import os
 import re
 
-FIELD_LINE = re.compile(r"^(OCR\s+)?([A-Z_]+):\s*(.+)$")
+FIELD_LINE = re.compile(r"^(扫描)?([^：:]+)[：:]\s*(.+)$")
 
-WEIGHT_KEYS = {"GROSS_WEIGHT_KG": "gross_weight_kg"}
-ID_KEYS = {"CONTAINER_NO": "container_no", "SEAL_NO": "seal_no"}
+WEIGHT_KEYS = {
+    "GROSS_WEIGHT_KG": "gross_weight_kg",
+    "毛重（公斤）": "gross_weight_kg",
+    "扫描毛重（公斤）": "gross_weight_kg",
+}
+ID_KEYS = {
+    "CONTAINER_NO": "container_no",
+    "SEAL_NO": "seal_no",
+    "柜号": "container_no",
+    "封条号": "seal_no",
+}
+STATION_KEYS = {"DOC_STATION", "单证站点"}
+SHIPMENT_KEYS = {"SHIPMENT", "票号"}
+COUNTRY_KEYS = {
+    "COUNTRY": "collapsed",
+    "国家": "collapsed",
+    "TRADE_COUNTRY": "trade",
+    "贸易国": "trade",
+    "DEPARTURE_COUNTRY": "departure",
+    "启运国": "departure",
+    "ORIGIN_COUNTRY": "origin",
+    "原产国": "origin",
+    "DESTINATION_COUNTRY": "destination",
+    "最终目的国": "destination",
+}
 
 
 def extract_document(text: str) -> dict:
@@ -32,12 +55,12 @@ def extract_document(text: str) -> dict:
         matched = FIELD_LINE.match(line)
         if not matched:
             continue
-        noisy, key, value = matched.group(1), matched.group(2), matched.group(3).strip()
-        label = "ocr_error" if noisy else "rewrite"
-        if key == "DOC_STATION":
+        noisy, key, value = matched.group(1), matched.group(2).strip(), matched.group(3).strip()
+        label = "ocr_error" if noisy or key.startswith("扫描") else "rewrite"
+        if key in STATION_KEYS:
             station = value
             continue
-        if key == "SHIPMENT":
+        if key in SHIPMENT_KEYS:
             shipment_id = value
             continue
         if key in WEIGHT_KEYS:
@@ -48,16 +71,12 @@ def extract_document(text: str) -> dict:
             observations[ID_KEYS[key]].append(
                 {"station": station, "value": value, "label": label}
             )
-        elif key == "COUNTRY":
-            collapsed = value
-        elif key == "TRADE_COUNTRY":
-            countries["trade"] = value
-        elif key == "DEPARTURE_COUNTRY":
-            countries["departure"] = value
-        elif key == "ORIGIN_COUNTRY":
-            countries["origin"] = value
-        elif key == "DESTINATION_COUNTRY":
-            countries["destination"] = value
+        elif key in COUNTRY_KEYS:
+            slot = COUNTRY_KEYS[key]
+            if slot == "collapsed":
+                collapsed = value
+            else:
+                countries[slot] = value
     if collapsed:
         countries["collapsed_value"] = collapsed
     return {
