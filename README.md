@@ -8,6 +8,8 @@
 
 用浏览器直接打开 `demo/index.html`。列表里红色的一票是主演示，点进去是「先别申报」、两处毛重和要改的栏。页脚三个数由规则对全部样例复算，不是手填的。
 
+交稿说明可直接粘贴 `docs/作品说明-DataClawHub.md`。三分钟讲稿在 `docs/路演稿.md`。导出合成单证：`python -m yuexian docs`。
+
 ```powershell
 python -m unittest discover -s tests -t . -v
 python -m yuexian.build_demo
